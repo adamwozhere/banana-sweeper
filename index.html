@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="app.js" defer></script>
+    <title>Banana Sweeper</title>
+  </head>
+  <body>
+    <div id="app" class="container">
+      <h1>Banana Sweeper</h1>
+      <p>
+        Don't slip on the bananas - mark them with right click, left click to
+        clear the grid.
+      </p>
+      <div class="status-bar">
+        <div>
+          <select name="difficulty" id="difficulty-select">
+            <option value="Easy" default>Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+        </div>
+        <div><span>&#127820;</span> <span id="banana-count"></span></div>
+        <div><span>&#9201;&#65039;</span> <span id="time-count">000</span></div>
+        <div><button id="btn-play-again" hidden>Play Again</button></div>
+      </div>
+
+      <div id="board" class="grid"></div>
+    </div>
+  </body>
+</html>
