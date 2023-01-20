@@ -1,10 +1,9 @@
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 body {
+  margin: 0;
   min-height: 100vh;
   font-family: Arial, Helvetica, sans-serif;
   padding: 2rem;
@@ -12,6 +11,18 @@ body {
 
 .container {
   max-width: 60rem;
+  margin-inline: auto;
+}
+
+.header {
+  text-align: center;
+}
+
+.status-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 2rem;
+  max-width: 30rem;
   margin-inline: auto;
 }
 
@@ -28,10 +39,12 @@ body {
   display: grid;
   place-content: center;
   background-color: antiquewhite;
+  font-weight: bold;
   width: 30px;
   height: 30px;
 }
-.cell:nth-child(even) {
+
+.cell.fill {
   background-color: bisque;
 }
 
@@ -39,30 +52,23 @@ body {
   border: 2px solid red;
 }
 .cell span {
+  font-weight: bold;
   pointer-events: none;
-}
-
-.cell.marked {
-  background-color: chocolate;
 }
 
 .cell.revealed {
   background-color: cadetblue;
+}
+.cell.revealed.fill {
+  background-color: rgb(91, 149, 151);
 }
 
 .cell.mine {
   background-color: red;
 }
 
-.status-bar {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-block: 2rem;
-}
-
 .status-bar > div {
-  background-color: grey;
+  background-color: burlywood;
   padding: 0.5rem 1rem;
 }
 
@@ -71,4 +77,36 @@ body {
 }
 .grid[data-cols='24'] {
   grid-template-columns: repeat(24, 30px);
+}
+
+.cell[data-number]::before {
+  content: attr(data-number);
+}
+.cell[data-marked]::before {
+  content: '\01F34C';
+}
+
+.cell[data-number='1'] {
+  color: blue;
+}
+.cell[data-number='2'] {
+  color: green;
+}
+.cell[data-number='3'] {
+  color: orange;
+}
+.cell[data-number='4'] {
+  color: purple;
+}
+.cell[data-number='5'] {
+  color: maroon;
+}
+.cell[data-number='6'] {
+  color: turquoise;
+}
+.cell[data-number='7'] {
+  color: black;
+}
+.cell[data-number='8'] {
+  color: grey;
 }

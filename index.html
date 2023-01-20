@@ -10,11 +10,16 @@
   </head>
   <body>
     <div id="app" class="container">
-      <h1>Banana Sweeper</h1>
-      <p>
-        Don't slip on the bananas - mark them with right click, left click to
-        clear the grid.
-      </p>
+      <div class="header">
+        <h1>&#127820; Bananasweeper &#127820;</h1>
+        <p>
+          Don't slip on the bananas - mark them with right click, left click to
+          clear the grid.
+        </p>
+        <a href="https://github.com/adamwozhere/banana-sweeper" target="_blank"
+          >View on GitHub</a
+        >
+      </div>
       <div class="status-bar">
         <div>
           <select name="difficulty" id="difficulty-select">
@@ -25,9 +30,8 @@
         </div>
         <div><span>&#127820;</span> <span id="banana-count"></span></div>
         <div><span>&#9201;&#65039;</span> <span id="time-count">000</span></div>
-        <div><button id="btn-play-again" hidden>Play Again</button></div>
+        <div><button id="btn-start" hidden>Play Again</button></div>
       </div>
-
       <div id="board" class="grid"></div>
     </div>
   </body>
