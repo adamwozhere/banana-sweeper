@@ -64,7 +64,15 @@ body {
 }
 
 .cell.mine {
+  background-color: orange;
+}
+
+.cell.mine--clicked {
   background-color: red;
+}
+
+.cell.mine::before {
+  content: '\01F34C';
 }
 
 .status-bar > div {
@@ -72,18 +80,15 @@ body {
   padding: 0.5rem 1rem;
 }
 
-.grid[data-cols='18'] {
+.grid[data-columns='18'] {
   grid-template-columns: repeat(18, 30px);
 }
-.grid[data-cols='24'] {
+.grid[data-columns='24'] {
   grid-template-columns: repeat(24, 30px);
 }
 
 .cell[data-number]::before {
   content: attr(data-number);
-}
-.cell[data-marked]::before {
-  content: '\01F34C';
 }
 
 .cell[data-number='1'] {
@@ -109,4 +114,8 @@ body {
 }
 .cell[data-number='8'] {
   color: grey;
+}
+
+.cell.marked::before {
+  content: '\01F34C';
 }

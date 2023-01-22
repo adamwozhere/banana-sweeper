@@ -1,31 +1,16 @@
 const debug = false;
 
-// todo: stop multiple intervals being set if a right click then a left click is pressed at the start
+// todo: Add banana mine counter updating on mark/unmark
+// change text on button win/gameover and change status bar bg colour
+// checker pattern
+// save high scores
+// refactor again
 
-const board = document.getElementById('board');
 const btnStart = document.getElementById('btn-start');
 const statusMsg = document.getElementById('status-message');
+const timeDisplay = document.getElementById('time-display');
 
 const difficultySelect = document.getElementById('difficulty-select');
-
-let boardCells = [];
-let minesRemaining;
-
-const Game = {
-  state: '',
-  cells: [],
-  mines: [],
-  time: 0,
-  minesRemaining: 0,
-  cellsRemaining: 0,
-  board: {
-    rows: 8,
-    columns: 10,
-    length() {
-      return this.rows * this.columns;
-    },
-  },
-};
 
 const Difficulty = {
   Easy: {
@@ -45,280 +30,226 @@ const Difficulty = {
   },
 };
 
-// need to redo flood fill
-function revealCell(index) {
-  const boundingCells = getBounds(index);
-  console.log('testing cell ' + index);
-  if (
-    Game.cells[index] === 0 &&
-    !boardCells[index].classList.contains('revealed')
-  ) {
-    boardCells[index].classList.add('revealed');
-    if (Game.cells[index] !== 0) {
-      boardCells[index].innerHTML = `<span>${Game.cells[index]}</span>`;
-      console.log(boardCells[index]);
-      // boardCells[index].dataset.number = index;
-    }
+// IIFE to create the game object and run newGame with default settings
+const Game = (function () {
+  // setup
+  let timer;
+  let time = 0;
 
-    Game.cellsRemaining -= 1;
-    boundingCells.forEach((cell) => {
-      revealCell(cell);
-    });
-  } else if (!boardCells[index].classList.contains('revealed')) {
-    boardCells[index].classList.add('revealed');
-    if (Game.cells[index] !== 0) {
-      // boardCells[index].innerHTML = `<span>${Game.cells[index]}</span>`;
-      boardCells[index].dataset.number = Game.cells[index];
-    }
-
-    Game.cellsRemaining -= 1;
-    return;
-  }
-}
-
-// New Game
-function newGame(difficulty = Difficulty.Easy) {
-  // set game settings
-  stopTimer();
-  Game.time = 0;
-  document.getElementById('time-count').innerText = formatTime(Game.time, 3);
-  Game.board.columns = difficulty.columns;
-  Game.board.rows = difficulty.rows;
-
-  console.log('start', Game.cellsRemaining);
-
-  console.log('len', Game.board.length());
-  // Initialize cells array
-  Game.cells = Array(Game.board.length()).fill(0);
-
-  // create array of random mine cell numbers
-  Game.mines = [];
-  while (Game.mines.length < difficulty.mines) {
-    const mine = Math.floor(Math.random() * Game.board.length());
-    if (!Game.mines.includes(mine)) {
-      Game.mines.push(mine);
-    }
-  }
-
-  Game.cellsRemaining = Game.board.length() - Game.mines.length;
-  Game.minesRemaining = Game.mines.length;
-  document.getElementById('banana-count').innerText = Game.minesRemaining;
-
-  console.log('mines', Game.mines);
-
-  // add mine and increment neighbouring indicator numbers on board array
-  Game.mines.forEach((mine) => {
-    // incremend adjacent cells
-    getBounds(mine).forEach((cell) => {
-      console.log('bounds', cell);
-      Game.cells[cell] += 1;
-    });
-
-    // set mine cell
-    Game.cells[mine] = 9;
-  });
-
-  // render board
-  board.dataset.cols = Game.board.columns;
-  board.innerHTML = '';
-  Game.cells.forEach((_, index) => {
-    board.insertAdjacentHTML(
-      'beforeend',
-      `<div class="cell ${
-        isCheckered(index) ? 'fill' : ''
-      }" data-index="${index}"></div>`
+  function newGame(settings = Difficulty.Easy) {
+    console.log('creating new game');
+    // reset timer function ?
+    btnStart.hidden = true;
+    stopTimer();
+    timeDisplay.innerHTML = '000';
+    this.board = new Board(
+      document.getElementById('test-board'),
+      settings.rows,
+      settings.columns,
+      settings.mines
     );
-  });
-
-  // get array of board cell divs
-  boardCells = Array.from(document.querySelectorAll('.cell'));
-
-  // show mine outlines in debug mode
-  if (debug) {
-    Game.mines.forEach((mine) => {
-      boardCells[mine].classList.add('banana');
-    });
+    this.state = 'ready';
+    // startTimer();
   }
 
-  Game.state = 'ready';
-}
+  function startTimer() {
+    time = 0;
+    timer = setInterval(updateTimer, 1000);
+    this.state = 'playing';
+  }
 
-let gameTimer;
-function startTimer() {
-  gameTimer = setInterval(() => {
-    Game.time += 1;
-    document.getElementById('time-count').innerText = formatTime(Game.time, 3);
-  }, 1000);
-}
+  function stopTimer() {
+    clearInterval(timer);
+    this.state = 'end';
+  }
 
-function stopTimer() {
-  clearInterval(gameTimer);
-}
-
-/**
- * Gets the bounding cells of a given cell index.
- *
- * @param {number} index
- * @returns {Array<number>}
- */
-function getBounds(index) {
-  // get 2D row / col position from index
-  let mineRow = Math.floor(index / Game.board.columns);
-  let mineCol = index % Game.board.columns;
-  let cells = [];
-  // loop through each cell in a 3x3 grid around the cell index parameter
-  // and push a valid cell index to cells array
-  for (let row = mineRow - 1; row <= mineRow + 1; row++) {
-    for (let col = mineCol - 1; col <= mineCol + 1; col++) {
-      const cell = row * Game.board.columns + col;
-      if (
-        cell >= 0 &&
-        cell < Game.board.length() &&
-        Math.floor(cell / Game.board.columns) === row
-      )
-        cells.push(cell);
+  function updateTimer() {
+    time += 1;
+    let formatted = time.toString();
+    while (formatted.length < 3) {
+      formatted = '0' + formatted;
     }
+    timeDisplay.innerHTML = formatted;
   }
-  return cells;
+
+  function gameOver(cell) {
+    stopTimer();
+    Game.state = 'end';
+    console.log(this.board.mines);
+    this.board.getMines().forEach((mine) => mine.element.classList.add('mine'));
+    cell.element.classList.add('mine--clicked');
+    btnStart.hidden = false;
+  }
+
+  function win() {
+    console.log('game win');
+    stopTimer();
+    Game.state = 'end';
+    btnStart.hidden = false;
+  }
+
+  newGame();
+  // expose newGame function publicly
+  return {
+    newGame,
+    startTimer,
+    stopTimer,
+    gameOver,
+    win,
+  };
+})();
+
+Game.newGame();
+
+function Cell(parent, i) {
+  this.index = i;
+  this.adjacentMines = 0;
+  this.isMarked = false;
+  this.hasMine = false;
+  this.isCleared = false;
+
+  parent.insertAdjacentHTML(
+    'beforeend',
+    `<div class="cell" data-index="${this.index}"></div>`
+  );
+  this.element = parent.querySelector(`.cell[data-index="${this.index}"]`);
 }
 
-function gameOver() {
-  stopTimer();
-  Game.state = 'end';
-  Game.mines.forEach((mine) => {
-    boardCells[mine].classList.add('mine');
-    delete boardCells[mine].dataset.marked;
-    boardCells[mine].innerHTML = `<span>&#127820;</span>`;
-  });
-  btnStart.innerText = 'Try Again';
-  btnStart.hidden = false;
-  console.log('game over');
-}
-
-function win() {
-  stopTimer();
-  Game.state = 'end';
-  btnStart.innerText = 'Play Again';
-  btnStart.hidden = false;
-  console.log('win');
-}
-
-/**
- * HELPER FUNCTIONS
- */
-
-function isCheckered(index) {
-  let num = index % (Game.board.columns * 2);
-  console.log(num);
-  if (num < Game.board.columns) {
-    return index % 2 === 0;
+Cell.prototype.toggleMarked = function () {
+  this.isMarked = !this.isMarked;
+  if (this.isMarked) {
+    this.element.classList.add('marked');
   } else {
-    return index % 2 === 1;
+    this.element.classList.remove('marked');
   }
-}
-
-const formatTime = (time, digits) => {
-  let timeString = time.toString();
-  while (timeString.length < digits) {
-    timeString = '0' + timeString;
-  }
-  return timeString;
 };
 
-/**
- * EVENT LISTENERS
- */
+function Board(element, rows, columns, numMines) {
+  element.innerHTML = '';
+  element.dataset.columns = columns;
+  element.addEventListener('click', handleClick);
+  element.addEventListener('contextmenu', handleRightClick);
+  const cells = [];
+  let cellsToClear = rows * columns - numMines;
 
-// Right-click (Mark / Unmark cell)
-board.addEventListener('contextmenu', (e) => {
+  while (cells.length < rows * columns) {
+    cells.push(new Cell(element, cells.length));
+  }
+
+  // refactor placing mines and incrementing in one go
+  const mines = [];
+  while (mines.length < numMines) {
+    const mine = Math.floor(Math.random() * cells.length);
+    if (!mines.includes(mine)) {
+      mines.push(mine);
+    }
+  }
+
+  mines.forEach((mine) => {
+    cells[mine].hasMine = true;
+
+    // debug show mine
+    cells[mine].element.classList.add('banana');
+    // increment neighbour mine count
+    getNeighbors(mine).forEach((cell) => {
+      if (cell.hasMine) {
+        cell.adjacentMines = null;
+      } else {
+        cell.adjacentMines += 1;
+      }
+      // debug draw numbers
+    });
+    cells[mine].adjacentMines = null;
+  });
+
+  function getNeighbors(index) {
+    // array index to 2D row/column coordinates
+    const getCoords = (index) => ({
+      row: Math.floor(index / columns),
+      column: index % columns,
+    });
+
+    const neighbors = [];
+    const cell = getCoords(index);
+
+    for (let row = cell.row - 1; row <= cell.row + 1; row++) {
+      for (let col = cell.column - 1; col <= cell.column + 1; col++) {
+        const neighbor = row * columns + col;
+        if (
+          neighbor >= 0 &&
+          neighbor < cells.length &&
+          neighbor !== index &&
+          getCoords(neighbor).row === row
+        ) {
+          neighbors.push(cells[neighbor]);
+        }
+      }
+    }
+    return neighbors;
+  }
+
+  console.log('Board.cells', cells);
+
+  return {
+    getCellByIndex(index) {
+      return cells[index];
+    },
+    clearCell(cell) {
+      if (cell.isMine || cell.isCleared) return;
+
+      cell.isCleared = true;
+
+      if (cell.adjacentMines === 0) {
+        getNeighbors(cell.index).forEach((cell) => this.clearCell(cell));
+      }
+      cell.element.classList.add('revealed');
+      cell.element.dataset.number = cell.adjacentMines || '';
+      cell.element.classList.remove('marked');
+      cell.isMarked = false;
+
+      cellsToClear -= 1;
+      if (cellsToClear === 0) Game.win();
+    },
+    getMines() {
+      return mines.map((mine) => cells[mine]);
+    },
+  };
+}
+
+// const testBoard = new Board(document.getElementById('test-board'), 8, 10, 10);
+
+function handleClick(e) {
+  if (!e.target.classList.contains('cell')) return;
+
+  console.log('click', e.target);
+  if (Game.state === 'ready') Game.startTimer();
+  if (Game.state !== 'playing') return;
+
+  const cell = Game.board.getCellByIndex(e.target.dataset.index);
+  if (cell.isMarked || cell.isCleared) return;
+  if (cell.hasMine) return Game.gameOver(cell);
+
+  Game.board.clearCell(cell);
+}
+
+function handleRightClick(e) {
   e.preventDefault();
-
   if (!e.target.classList.contains('cell')) return;
 
-  console.log(e);
-
-  // todo: check for cell click only
-
-  if (Game.state === 'ready') {
-    Game.state = 'playing';
-    startTimer();
-  }
-
+  console.log('right-click', e.target);
+  if (Game.state === 'ready') Game.startTimer();
   if (Game.state !== 'playing') return;
 
-  let index = boardCells.indexOf(e.target);
-  console.log(index);
+  const cell = Game.board.getCellByIndex(e.target.dataset.index);
+  console.log('try mark', cell);
+  if (!cell.isCleared) cell.toggleMarked();
+}
 
-  const cell = boardCells[index];
-  if (cell.classList.contains('revealed')) return;
-
-  if (cell.hasAttribute('data-marked')) {
-    delete cell.dataset.marked;
-    Game.minesRemaining += 1;
-  } else {
-    cell.setAttribute('data-marked', '');
-    Game.minesRemaining -= 1;
-  }
-
-  document.getElementById('banana-count').innerText = Game.minesRemaining;
-  // Array.from(boardButtons)[index].classList.add('marked');
-});
-
-// Left-click (Reveal Cell)
-board.addEventListener('click', (e) => {
-  // todo: check for cell click only
-  if (!e.target.classList.contains('cell')) return;
-
-  console.log(e.target);
-
-  if (Game.state === 'ready') {
-    Game.state = 'playing';
-    startTimer();
-  }
-
-  if (Game.state !== 'playing') return;
-
-  if (
-    e.target.dataset.cell === 'revealed' ||
-    e.target.dataset.cell === 'marked' ||
-    e.target.hasAttribute('data-marked')
-  )
-    return;
-
-  let index = boardCells.indexOf(e.target);
-  console.log(index);
-
-  // check for gameOver
-  if (Game.cells[index] >= 9) {
-    gameOver();
-    return;
-  }
-
-  revealCell(index);
-  console.log('remaining', Game.cellsRemaining);
-  // check for Win
-  if (Game.cellsRemaining === 0) {
-    win();
-  }
-
-  // console.log('cells', revealedCells.length);
-  // if (clearCells === 0) {
-  //   console.log('WIN');
-  // }
-});
-
-// Play Again
-btnStart.addEventListener('click', (e) => {
-  const setting = difficultySelect.value;
-  newGame(Difficulty[setting]);
-  btnStart.hidden = true;
-});
-
-// Change Difficulty
 difficultySelect.addEventListener('change', (e) => {
-  const setting = e.target.value;
-  newGame(Difficulty[setting]);
-  difficultySelect.blur();
+  Game.newGame(Difficulty[e.target.value]);
+  e.target.blur();
 });
 
-newGame(Difficulty.Easy);
+btnStart.addEventListener('click', () => {
+  Game.newGame(Difficulty[difficultySelect.value]);
+});
