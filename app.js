@@ -1,13 +1,12 @@
-const debug = false;
-
-// todo: Add banana mine counter updating on mark/unmark
+// TODO: Add banana mine counter updating on mark/unmark
 // change text on button win/gameover and change status bar bg colour
 // checker pattern
 // save high scores
+// still not sure: better to use dataset.index or array.indexOf for the cell indexes
 // refactor again
 
 const btnStart = document.getElementById('btn-start');
-const statusMsg = document.getElementById('status-message');
+const mineDisplay = document.getElementById('mine-display');
 const timeDisplay = document.getElementById('time-display');
 
 const difficultySelect = document.getElementById('difficulty-select');
@@ -35,6 +34,7 @@ const Game = (function () {
   // setup
   let timer;
   let time = 0;
+  // let markedMines;
 
   function newGame(settings = Difficulty.Easy) {
     console.log('creating new game');
@@ -42,8 +42,12 @@ const Game = (function () {
     btnStart.hidden = true;
     stopTimer();
     timeDisplay.innerHTML = '000';
+    mineDisplay.innerHTML = settings.mines;
+    this.markedMines = settings.mines;
+
+    // create board
     this.board = new Board(
-      document.getElementById('test-board'),
+      document.getElementById('board'),
       settings.rows,
       settings.columns,
       settings.mines
@@ -119,9 +123,23 @@ Cell.prototype.toggleMarked = function () {
   this.isMarked = !this.isMarked;
   if (this.isMarked) {
     this.element.classList.add('marked');
+    return -1;
   } else {
     this.element.classList.remove('marked');
+    return 1;
   }
+};
+
+Cell.prototype.clear = function () {
+  let wasMarked = this.isMarked;
+  this.isCleared = true;
+  this.isMarked = false;
+  this.element.classList.add('revealed');
+  this.element.classList.remove('marked');
+  if (this.adjacentMines > 0) {
+    this.element.dataset.number = this.adjacentMines;
+  }
+  return wasMarked ? 1 : 0;
 };
 
 function Board(element, rows, columns, numMines) {
@@ -136,31 +154,21 @@ function Board(element, rows, columns, numMines) {
     cells.push(new Cell(element, cells.length));
   }
 
-  // refactor placing mines and incrementing in one go
   const mines = [];
   while (mines.length < numMines) {
     const mine = Math.floor(Math.random() * cells.length);
     if (!mines.includes(mine)) {
       mines.push(mine);
+      const cell = cells[mine];
+      cell.hasMine = true;
+      //debug
+      cell.element.classList.add('banana');
+      getNeighbors(mine).forEach((cell) => {
+        cell.adjacentMines += 1;
+      });
+      cell.adjacentMines = null;
     }
   }
-
-  mines.forEach((mine) => {
-    cells[mine].hasMine = true;
-
-    // debug show mine
-    cells[mine].element.classList.add('banana');
-    // increment neighbour mine count
-    getNeighbors(mine).forEach((cell) => {
-      if (cell.hasMine) {
-        cell.adjacentMines = null;
-      } else {
-        cell.adjacentMines += 1;
-      }
-      // debug draw numbers
-    });
-    cells[mine].adjacentMines = null;
-  });
 
   function getNeighbors(index) {
     // array index to 2D row/column coordinates
@@ -188,8 +196,6 @@ function Board(element, rows, columns, numMines) {
     return neighbors;
   }
 
-  console.log('Board.cells', cells);
-
   return {
     getCellByIndex(index) {
       return cells[index];
@@ -202,10 +208,9 @@ function Board(element, rows, columns, numMines) {
       if (cell.adjacentMines === 0) {
         getNeighbors(cell.index).forEach((cell) => this.clearCell(cell));
       }
-      cell.element.classList.add('revealed');
-      cell.element.dataset.number = cell.adjacentMines || '';
-      cell.element.classList.remove('marked');
-      cell.isMarked = false;
+
+      Game.markedMines += cell.clear();
+      mineDisplay.innerHTML = Game.markedMines;
 
       cellsToClear -= 1;
       if (cellsToClear === 0) Game.win();
@@ -215,8 +220,6 @@ function Board(element, rows, columns, numMines) {
     },
   };
 }
-
-// const testBoard = new Board(document.getElementById('test-board'), 8, 10, 10);
 
 function handleClick(e) {
   if (!e.target.classList.contains('cell')) return;
@@ -242,7 +245,10 @@ function handleRightClick(e) {
 
   const cell = Game.board.getCellByIndex(e.target.dataset.index);
   console.log('try mark', cell);
-  if (!cell.isCleared) cell.toggleMarked();
+  if (!cell.isCleared) {
+    Game.markedMines += cell.toggleMarked();
+    mineDisplay.innerHTML = Game.markedMines;
+  }
 }
 
 difficultySelect.addEventListener('change', (e) => {
