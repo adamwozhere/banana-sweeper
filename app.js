@@ -4,6 +4,115 @@
 // save high scores
 // still not sure: better to use dataset.index or array.indexOf for the cell indexes
 // refactor again
+// implement 'Chording' ?
+// refactor change to open / close cell
+
+const config = {
+  Elements: {
+    board: 'board',
+    time: 'time-display',
+    mine: 'mine-display',
+  },
+  Difficulty: {
+    Easy: {
+      mines: 10,
+      rows: 8,
+      columns: 10,
+    },
+    Medium: {
+      mines: 40,
+      rows: 14,
+      columns: 18,
+    },
+    Hard: {
+      mines: 99,
+      rows: 20,
+      columns: 24,
+    },
+  },
+};
+
+class App {
+  contructor(config) {}
+}
+
+class Grid {
+  #mines = [];
+  #rows;
+  #columns;
+  #length;
+  #mineCount;
+
+  constructor(settings) {
+    this.#rows = settings.rows;
+    this.#columns = settings.columns;
+    this.#length = this.#rows * this.#columns;
+    this.#mineCount = settings.mines;
+
+    this.#createMines();
+  }
+  #createMines() {
+    while (this.#mines.length < this.#mineCount) {
+      const random = Math.floor(Math.random() * this.#length);
+      if (!this.#mines.includes(random)) this.#mines.push(random);
+    }
+  }
+}
+
+class Cell {
+  element = `<div class="cell" data-cell="closed" onclick="this.handleOpen"></div>`;
+  #isOpen;
+  #isFlagged;
+  #mineCount;
+  #hasMine;
+
+  static #html = `<div class="cell" data-cell="closed" onclick="this.handleOpen"></div>`;
+  static #index = 0;
+
+  constructor() {
+    this.index = Cell.#index++;
+    // this.element = `<div class="cell" data-cell="closed" onclick="this.handleOpen"></div>`;
+    this.#isOpen = false;
+    this.#isFlagged = false;
+    this.#mineCount = 0;
+
+    return this.element;
+  }
+
+  handleOpen(e) {
+    console.log(this.#index);
+  }
+
+  open() {
+    this.element.dataset.cell = open;
+  }
+
+  isOpen() {
+    return this.#isOpen;
+  }
+
+  setMine() {
+    this.#hasMine = true;
+  }
+
+  incrementMineCount() {
+    this.#mineCount++;
+  }
+
+  hasMine() {
+    return this.#hasMine;
+  }
+
+  toggleFlag() {
+    if (this.#isOpen) {
+      !this.#isFlagged;
+    }
+    return this.#isFlagged;
+  }
+}
+const testCells = new Cell();
+console.log(testCells);
+document.getElementById('boardNew').innerHTML = testCells.element;
 
 const btnStart = document.getElementById('btn-start');
 const mineDisplay = document.getElementById('mine-display');
@@ -105,43 +214,6 @@ const Game = (function () {
 
 Game.newGame();
 
-function Cell(parent, i) {
-  this.index = i;
-  this.adjacentMines = 0;
-  this.isMarked = false;
-  this.hasMine = false;
-  this.isCleared = false;
-
-  parent.insertAdjacentHTML(
-    'beforeend',
-    `<div class="cell" data-index="${this.index}"></div>`
-  );
-  this.element = parent.querySelector(`.cell[data-index="${this.index}"]`);
-}
-
-Cell.prototype.toggleMarked = function () {
-  this.isMarked = !this.isMarked;
-  if (this.isMarked) {
-    this.element.classList.add('marked');
-    return -1;
-  } else {
-    this.element.classList.remove('marked');
-    return 1;
-  }
-};
-
-Cell.prototype.clear = function () {
-  let wasMarked = this.isMarked;
-  this.isCleared = true;
-  this.isMarked = false;
-  this.element.classList.add('revealed');
-  this.element.classList.remove('marked');
-  if (this.adjacentMines > 0) {
-    this.element.dataset.number = this.adjacentMines;
-  }
-  return wasMarked ? 1 : 0;
-};
-
 function Board(element, rows, columns, numMines) {
   element.innerHTML = '';
   element.dataset.columns = columns;
@@ -162,7 +234,7 @@ function Board(element, rows, columns, numMines) {
       const cell = cells[mine];
       cell.hasMine = true;
       //debug
-      cell.element.classList.add('banana');
+      //cell.element.classList.add('banana');
       getNeighbors(mine).forEach((cell) => {
         cell.adjacentMines += 1;
       });
