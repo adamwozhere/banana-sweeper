@@ -44,10 +44,6 @@ body {
   height: 30px;
 }
 
-.cell.fill {
-  background-color: bisque;
-}
-
 .cell.banana {
   border: 2px solid red;
 }
@@ -59,8 +55,12 @@ body {
 .cell.revealed {
   background-color: cadetblue;
 }
-.cell.revealed.fill {
+.cell.revealed.checker {
   background-color: rgb(91, 149, 151);
+}
+
+.cell.checker {
+  background-color: rgb(247, 221, 187);
 }
 
 .cell.mine {
@@ -83,6 +83,7 @@ body {
 .grid[data-columns='18'] {
   grid-template-columns: repeat(18, 30px);
 }
+
 .grid[data-columns='24'] {
   grid-template-columns: repeat(24, 30px);
 }
@@ -119,3 +120,4 @@ body {
 .cell.marked::before {
   content: '\01F34C';
 }
+

@@ -1,9 +1,4 @@
-// TODO: Add banana mine counter updating on mark/unmark
-// change text on button win/gameover and change status bar bg colour
-// checker pattern
-// save high scores
-// still not sure: better to use dataset.index or array.indexOf for the cell indexes
-// refactor again
+let debug = false;
 
 const btnStart = document.getElementById('btn-start');
 const mineDisplay = document.getElementById('mine-display');
@@ -38,6 +33,7 @@ const Game = (function () {
 
   function newGame(settings = Difficulty.Easy) {
     console.log('creating new game');
+    this.settings = settings;
     // reset timer function ?
     btnStart.hidden = true;
     stopTimer();
@@ -92,7 +88,6 @@ const Game = (function () {
     btnStart.hidden = false;
   }
 
-  newGame();
   // expose newGame function publicly
   return {
     newGame,
@@ -105,7 +100,7 @@ const Game = (function () {
 
 Game.newGame();
 
-function Cell(parent, i) {
+function Cell(parent, i, classes = 'cell') {
   this.index = i;
   this.adjacentMines = 0;
   this.isMarked = false;
@@ -114,7 +109,7 @@ function Cell(parent, i) {
 
   parent.insertAdjacentHTML(
     'beforeend',
-    `<div class="cell" data-index="${this.index}"></div>`
+    `<div class="${classes}" data-index="${this.index}"></div>`
   );
   this.element = parent.querySelector(`.cell[data-index="${this.index}"]`);
 }
@@ -150,8 +145,21 @@ function Board(element, rows, columns, numMines) {
   const cells = [];
   let cellsToClear = rows * columns - numMines;
 
+  // for checker pattern
+  let cols = Game.settings.columns;
+  let checkerCounter = 0;
+
   while (cells.length < rows * columns) {
-    cells.push(new Cell(element, cells.length));
+    // calculate checker pattern
+    if (checkerCounter % (cols + 1) === 0) checkerCounter++;
+    let isChecker = checkerCounter % 2 === 0;
+
+    if (isChecker) {
+      cells.push(new Cell(element, cells.length, 'cell checker'));
+    } else {
+      cells.push(new Cell(element, cells.length));
+    }
+    checkerCounter++;
   }
 
   const mines = [];
@@ -162,7 +170,9 @@ function Board(element, rows, columns, numMines) {
       const cell = cells[mine];
       cell.hasMine = true;
       //debug
-      cell.element.classList.add('banana');
+      if (debug) {
+        cell.element.classList.add('banana');
+      }
       getNeighbors(mine).forEach((cell) => {
         cell.adjacentMines += 1;
       });
@@ -259,3 +269,4 @@ difficultySelect.addEventListener('change', (e) => {
 btnStart.addEventListener('click', () => {
   Game.newGame(Difficulty[difficultySelect.value]);
 });
+
